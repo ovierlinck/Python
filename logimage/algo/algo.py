@@ -58,7 +58,7 @@ def fillFromStart(line):
 
     firstBlockLength = blocks[0]
 
-    firstKnownCell = line.getFirstKnownCell()
+    firstKnownCell = line.getFirstKnownCellFrom(0)
     if firstKnownCell:
         firstKnownIndex, value = firstKnownCell
 
@@ -80,7 +80,7 @@ def fillFromStart(line):
                         line.setCell(i, model.cellState.CellState.Full)
 
             # Prolong backward if block can not join next block (would be too long)
-            firstKnownIndex, value = line.getFirstKnownCell()  # Refresh firstIndex
+            firstKnownIndex, value = line.getFirstKnownCellFrom(0)  # Refresh firstIndex
             assert value == model.cellState.CellState.Full, "Cell at %i should be Full in line %s" % (firstKnownIndex, line)
             if firstBlockLength > firstKnownIndex:  # First index is part of first block
                 endOfFirstBlock = line.getEndOfBlock(firstKnownIndex)
@@ -96,7 +96,7 @@ def fillFromStart(line):
                                 line.setCell(i, model.cellState.CellState.Full)
 
             # Empty leading cell(s) if block 'too long'
-            firstKnownIndex, value = line.getFirstKnownCell()  # Refresh firstIndex
+            firstKnownIndex, value = line.getFirstKnownCellFrom(0)  # Refresh firstIndex
             assert value == model.cellState.CellState.Full, "Cell at %i should be Full in line %s" % (firstKnownIndex, line)
             if firstBlockLength >= firstKnownIndex:  # First index is part of first block
                 endOfBlock = line.getEndOfBlock(firstKnownIndex)
@@ -108,7 +108,8 @@ def fillFromStart(line):
 
                 # Close Block if complete
                 if length == firstBlockLength:
-                    line.setCell(endOfBlock + 1, model.cellState.CellState.Empty)
+                    if endOfBlock + 1 < line.getLength():
+                        line.setCell(endOfBlock + 1, model.cellState.CellState.Empty)
 
         elif value == model.cellState.CellState.Empty:
             # If first gap until Empty is too small for block, mark it as Empty
@@ -119,20 +120,35 @@ def fillFromStart(line):
     return line
 
 
-def applyRule(board, isRow, isMirror, rule):
+def emptyUnknownCells(line):
+    assert isinstance(line, algo.line.ILine)
+    for i in range(line.getLength()):
+        if line.getCell(i) == model.cellState.CellState.Unknown:
+            line.setCell(i, model.cellState.CellState.Empty)
+
+
+def applyRuleOnLines(board, isRow, isMirror, rule):
     """
     Apply the given algo on the given line (rows or columns) of the board
     :param board:
     :param isRow: boolean defining which rows/cols to use
     :param isMirror: boolean defining which rows/cols to use
     :param rule: must be a callable which accept a Line
-    :return: Nothing
+    :return: the nbr of lines for which one rule was evaluated
     """
 
     print("Applying rule '%s' for %s (isMirror=%s)" % (getattr(rule, '__name__', str(rule)), "rows" if isRow else "columns", isMirror))
+    nbEvaluatedLines = 0
     for index in range(board.nbRows if isRow else board.nbCols):
         completed = board.grid.isCompletedRow(index) if isRow else board.grid.isCompletedCol(index)
         if completed:
             continue
         line = algo.line.BoardLine(board, isRow=isRow, index=index, isMirror=isMirror)
-        rule(line)
+        simplifiedLine = algo.line.SimplifiedLine(line)
+        if simplifiedLine.isComplete:
+            emptyUnknownCells(line)
+        else:
+            rule(simplifiedLine)
+        nbEvaluatedLines += 1
+
+    return nbEvaluatedLines

@@ -73,13 +73,6 @@ class ILine:
         return None
 
 
-    def getFirstKnownCell(self):
-        """
-        :return: tuple (index, value) of first cell which is not 'Unknown' or None
-        """
-        return self.getFirstKnownCellFrom(0)
-
-
     def getEndOfBlock(self, start):
         """
         :return: index of end of block = index of last consecutive Full block
@@ -208,9 +201,12 @@ class SimplifiedLine(ILine):
         self.last = None  # index of last useful cell in other
         self.firstBlockIndex = None  # index of first useful block in other
         self.lastBlockIndex = None  # index of last useful block in other
+        self.isComplete = False
 
         self.evaluate()
 
+        if self.firstBlockIndex>self.lastBlockIndex: # No block left - line is solved
+            self.isComplete = True
 
     def getBlocks(self):
         return self.other.getBlocks()[self.firstBlockIndex:self.lastBlockIndex + 1]

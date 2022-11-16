@@ -86,6 +86,8 @@ class MyTestCase(unittest.TestCase):
         self.doTestSimplifiedLine("*.*/*...", "*.*/*...", blocks=[3, 2], expectedBlocks=[3, 2])
         self.doTestSimplifiedLine("*.*/*...", "//*.*/*...", blocks=[3, 2], expectedBlocks=[3, 2])
 
+        self.doTestSimplifiedLine(".", "*///.//*", blocks=[1, 1], expectedBlocks=[])
+
 
 if __name__ == '__main__':
     unittest.main()

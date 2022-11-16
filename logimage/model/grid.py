@@ -65,7 +65,7 @@ class Grid:
             for listener in self.listeners:
                 listener.onRowCompleted(row)
         if colIsComplete:
-            self.completedCols.add(row)
+            self.completedCols.add(col)
             for listener in self.listeners:
                 listener.onColCompleted(col)
 
@@ -79,6 +79,11 @@ class Grid:
 
     def isCompletedCol(self, col):
         return col in self.completedCols
+
+
+    def isCompleted(self):
+        return len(self.completedRows) == self.height and \
+               len(self.completedCols) == self.width
 
 
     def addListener(self, listener):

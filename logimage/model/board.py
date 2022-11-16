@@ -10,6 +10,8 @@ class Board:
         :param rowBlocks: iterable of int[], to set definitions of blocks for all rows
         :param colBlocks: iterable of int[], to set definitions of blocks for all columns
         """
+        assert sum(sum(block) for block in rowBlocks) == sum(sum(block) for block in colBlocks)
+
         self.rowBlocks = [blocks for blocks in rowBlocks]
         self.colBlocks = [blocks for blocks in colBlocks]
 
@@ -24,8 +26,10 @@ class Board:
     def addGridListener(self, gridListener):
         self.grid.addListener(gridListener)
 
+
     def removeGridListener(self, gridListener):
         self.grid.removeListener(gridListener)
+
 
     def setFormatter(self, formatter):
         self.formatter = formatter
