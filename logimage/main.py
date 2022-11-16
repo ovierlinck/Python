@@ -140,6 +140,12 @@ if __name__ == "__main__":
             nbEvals += applyRuleOnRowsAndCols(board, isMirror=isMirror, rule=algo.algo.fillFromStart)
             nbBoardRules += 1
 
+        for isMirror in (False, True):
+            if board.grid.isCompleted():
+                break
+            nbEvals += applyRuleOnRowsAndCols(board, isMirror=isMirror, rule=algo.algo.closeSmallBlocks)
+            nbBoardRules += 1
+
         changed = bool(PerCycleListener.changedCells)
         nbCycles += 1
 

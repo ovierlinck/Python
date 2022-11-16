@@ -73,6 +73,17 @@ class ILine:
         return None
 
 
+    def getLastKnownCellUntil(self, end):
+        """
+        :return: tuple (index, value) of last cell which is not 'Unknown' or None, until cell with index 'start' (included)
+        """
+        for i in range(end, -1, -1):
+            cell = self.getCell(i)
+            if cell != model.cellState.CellState.Unknown:
+                return i, cell
+        return None
+
+
     def getEndOfBlock(self, start):
         """
         :return: index of end of block = index of last consecutive Full block
@@ -81,6 +92,28 @@ class ILine:
         while start < self.getLength() and self.getCell(start) == model.cellState.CellState.Full:
             start += 1
         return start - 1
+
+
+    def extractBlocks(self):
+        """
+        :return: a list of tuple (start, end) describing the current 'blocks' in the line. End is included in the block. (they can be partial, they can be part of the same final block)
+        """
+        answer = list()
+        blockStart = None
+        for i in range(self.getLength()):
+            cell = self.getCell(i)
+            if cell == model.cellState.CellState.Full:
+                if blockStart is None:
+                    blockStart = i
+            else:
+                if blockStart is not None:
+                    answer.append((blockStart, i - 1))
+                    blockStart = None
+        # Last ongoing one
+        if blockStart is not None:
+            answer.append((blockStart, i))
+
+        return answer
 
 
 class LocalLine(ILine):
@@ -205,8 +238,9 @@ class SimplifiedLine(ILine):
 
         self.evaluate()
 
-        if self.firstBlockIndex>self.lastBlockIndex: # No block left - line is solved
+        if self.firstBlockIndex > self.lastBlockIndex:  # No block left - line is solved
             self.isComplete = True
+
 
     def getBlocks(self):
         return self.other.getBlocks()[self.firstBlockIndex:self.lastBlockIndex + 1]
@@ -292,4 +326,3 @@ class SimplifiedLine(ILine):
             nbBlockToSimplify += 1
 
         return nbBlockToSimplify
-
