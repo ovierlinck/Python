@@ -1,5 +1,4 @@
 import algo.line
-import model.blocksDef
 import model.board
 import model.cellState
 import model.grid
@@ -11,13 +10,12 @@ def solveDoF(line):
     :param line: one ILine - this line is changed in place
     :return: line, possibly modified
     """
-    defs = line.getBlockDefs()
-    neededCells = sum(defs.getDef(i) for i in range(defs.getNbDefs())) + defs.getNbDefs() - 1
+    defs = line.getBlocks()
+    neededCells = sum(defs) + len(defs) - 1
     dof = line.getLength() - neededCells
 
     cursor = 0
-    for i in range(defs.getNbDefs()):
-        blockSize = defs.getDef(i)
+    for blockSize in defs:
         if blockSize > dof:
             cursor += dof
             for j in range(blockSize - dof):
@@ -37,13 +35,13 @@ def _isOnlyOneBlockBefore(line, index):
     """
     :return: True if only one block in line or if only the first can fit before index (excluded), i.e. if not enough room to fit the second block
     """
-    blocks = line.getBlockDefs()
-    assert blocks and blocks.getNbDefs(), "Line can not be empty, must have blocks : %s" % line  # Or should be solved explicitly (Empty everywhere,)
-    if blocks.getNbDefs() == 1:
+    blocks = line.getBlocks()
+    assert blocks and len(blocks), "Line can not be empty, must have blocks : %s" % line  # Or should be solved explicitly (Empty everywhere,)
+    if len(blocks) == 1:
         return True
 
-    firstBlockLength = blocks.getDef(0)
-    secondBlockLength = blocks.getDef(1)
+    firstBlockLength = blocks[0]
+    secondBlockLength = blocks[1]
 
     return firstBlockLength + secondBlockLength + 1 > index
 
@@ -55,10 +53,10 @@ def fillFromStart(line):
     Close block ('Empty') if long enough
     :return: line, possibly modified
     """
-    blocks = line.getBlockDefs()
-    assert blocks and blocks.getNbDefs(), "Line can not be empty, must have blocks : %s" % line  # Or should be solved explicitly (Empty everywhere,)
+    blocks = line.getBlocks()
+    assert blocks and len(blocks), "Line can not be empty, must have blocks : %s" % line  # Or should be solved explicitly (Empty everywhere,)
 
-    firstBlockLength = blocks.getDef(0)
+    firstBlockLength = blocks[0]
 
     firstKnownCell = line.getFirstKnownCell()
     if firstKnownCell:

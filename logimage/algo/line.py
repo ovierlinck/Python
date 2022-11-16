@@ -1,4 +1,3 @@
-import model.blocksDef
 import model.cellState
 
 
@@ -30,7 +29,10 @@ class ILine:
     """
 
 
-    def getBlockDefs(self):
+    def getBlocks(self):
+        """
+        :return: iterable of int, defining the block sizes
+        """
         pass
 
 
@@ -48,7 +50,7 @@ class ILine:
 
     def __str__(self):
         return "%s : %s" % (
-            self.getBlockDefs(),
+            self.getBlocks(),
             " ".join(LineCellImage[self.getCell(index)] for index in range(self.getLength()))
         )
 
@@ -94,12 +96,12 @@ class LocalLine(ILine):
     """
 
 
-    def __init__(self, blockDefs, lineDef):
+    def __init__(self, blocks, lineDef):
         """
-        :param blockDefs:
+        :param blocks:
         :param lineDef: either the length of the line (which will be initialized with 'Unknown' or a string valid for fillFromString()
         """
-        self.blockDefs = blockDefs
+        self.blocks = [block for block in blocks]  # Local copy, as vector
         if isinstance(lineDef, int):
             self.data = [model.cellState.CellState.Unknown] * lineDef
         else:
@@ -117,8 +119,8 @@ class LocalLine(ILine):
             self.data.append(getValueFromImage(c))
 
 
-    def getBlockDefs(self):
-        return self.blockDefs
+    def getBlocks(self):
+        return self.blocks
 
 
     def getLength(self):
@@ -136,25 +138,6 @@ class LocalLine(ILine):
         assert self.getCell(index) in (model.cellState.CellState.Unknown, cellState), \
             "setCell(index=%i, cellState=%s): Can not change cell value. Line is %s" % (index, cellState, self)
         self.data[index] = cellState
-
-
-class MirrorBlocksDef(model.blocksDef.IBlocksDef):
-    """
-    BlocksDef backed by another IBLocksDef but returning the mirrored values
-    """
-
-
-    def __init__(self, other):
-        assert isinstance(other, model.blocksDef.IBlocksDef)
-        self.other = other
-
-
-    def getNbDefs(self):
-        return self.other.getNbDefs()
-
-
-    def getDef(self, index):
-        return self.other.getDef(self.other.getNbDefs() - index - 1)
 
 
 class BoardLine(ILine):
@@ -180,9 +163,14 @@ class BoardLine(ILine):
         assert (index <= board.nbRows if isRow else index <= board.nbCols)
 
 
-    def getBlockDefs(self):
+    def getBlocks(self):
         blocks = self.board.getRowBlocks(self.index) if self.isRow else self.board.getColBlocks(self.index)
-        return MirrorBlocksDef(blocks) if self.isMirror else blocks
+        if self.isMirror:
+            copy = blocks.copy()
+            copy.reverse()
+            return copy
+        else:
+            return blocks
 
 
     def getLength(self):
@@ -208,7 +196,7 @@ class SimplifiedLine(ILine):
     Decorator of an ILine to make it looks simplified
     Simplification means:
         - skip leading/trailing cells until last Empty included
-        - skip all corresponding BlockDefs
+        - skip all corresponding Blocks
     WARNING: simplification is done at creation time (or on request through call to simplify()), it is NOT dynamically updated
     """
 
@@ -218,14 +206,14 @@ class SimplifiedLine(ILine):
         self.other = other
         self.first = None  # index of first useful cell in other
         self.last = None  # index of last useful cell in other
-        self.firstBlockDef = None  # index of first useful block in other
-        self.lastBlockDef = None  # index of last useful block in other
+        self.firstBlockIndex = None  # index of first useful block in other
+        self.lastBlockIndex = None  # index of last useful block in other
 
         self.evaluate()
 
 
-    def getBlockDefs(self):
-        super().getBlockDefs()[self.firstBlockDef:self.lastBlockDef + 1]
+    def getBlocks(self):
+        return self.other.getBlocks()[self.firstBlockIndex:self.lastBlockIndex + 1]
 
 
     def getLength(self):
@@ -243,6 +231,8 @@ class SimplifiedLine(ILine):
     def evaluate(self):
         self.first = self._findFirst()
         self.last = self._findLast()
+        self.firstBlockIndex = self.__findFirstBlockIndex()
+        self.lastBlockIndex = self.__findLastBlockIndex()
 
 
     def _findFirst(self):
@@ -253,7 +243,7 @@ class SimplifiedLine(ILine):
             if self.other.getCell(first) == model.cellState.CellState.Empty:
                 lastEmpty = first
             first += 1
-        first = lastEmpty + 1# could overflow - TODO???
+        first = lastEmpty + 1  # could overflow - TODO???
         return first
 
 
@@ -268,3 +258,42 @@ class SimplifiedLine(ILine):
             last -= 1
         last = lastEmpty - 1  # could overflow - TODO???
         return last
+
+
+    def __findFirstBlockIndex(self):
+        """
+        requires self.first to be set
+        """
+        return self.__nbBlocksToSimplify(range(self.first))
+
+
+    def __findLastBlockIndex(self):
+        """
+        requires self.last to be set
+        """
+        nbToSimplify = self.__nbBlocksToSimplify(range(self.other.getLength() - 1, self.last + 1, -1))
+        nbOthers = len(self.other.getBlocks())
+        return nbOthers - 1 - nbToSimplify
+
+
+    def __nbBlocksToSimplify(self, cellRangeToSimplify):
+        """
+        requires self.first to be set
+        """
+        nbBlockToSimplify = 0
+        inBlock = False
+        for i in cellRangeToSimplify:
+            if self.other.getCell(i) == model.cellState.CellState.Empty:
+                if inBlock:  # one block just terminated
+                    nbBlockToSimplify += 1
+                inBlock = False
+            elif self.other.getCell(i) == model.cellState.CellState.Full:
+                inBlock = True
+            else:
+                raise RuntimeError("No Unknown cell expected at %i for line %s, with first=%i" % (i, self.other, self.first))
+
+        if inBlock:  # For the last ongoing block
+            nbBlockToSimplify += 1
+
+        return nbBlockToSimplify
+

@@ -1,4 +1,3 @@
-from model.blocksDef import BlocksDef
 from model.boardFormatter import Formatter
 from model.cellState import CellState
 from model.formatters import SimpleFormatter
@@ -8,11 +7,11 @@ from model.grid import Grid
 class Board:
     def __init__(self, rowBlocks, colBlocks):
         """
-        :param rowBlocks: iterable of iterable of int, to set definitions of block definition for all rows
-        :param colBlocks: iterable of iterable of int, to set definitions of block definition for all columns
+        :param rowBlocks: iterable of int[], to set definitions of blocks for all rows
+        :param colBlocks: iterable of int[], to set definitions of blocks for all columns
         """
-        self.rowBlocks = [BlocksDef(blocks) for blocks in rowBlocks]
-        self.colBlocks = [BlocksDef(blocks) for blocks in colBlocks]
+        self.rowBlocks = [blocks for blocks in rowBlocks]
+        self.colBlocks = [blocks for blocks in colBlocks]
 
         self.nbCols = len(self.colBlocks)
         self.nbRows = len(self.rowBlocks)
@@ -69,9 +68,9 @@ class Board:
             line = prefix.ljust(leftToGrid)
             for col in range(self.nbCols):
                 blocks = self.getColBlocks(col)
-                nbDefs = blocks.getNbDefs()
+                nbDefs = len(blocks)
                 index = i + nbDefs - maxNbColBlocks
-                line += ("%3i" % blocks.getDef(index)) if index >= 0 else "   "
+                line += ("%3i" % blocks[index]) if index >= 0 else "   "
             line += self.formatter.getRowSuffixForColBlocks(self, i) + "\n"
             text += line
 
@@ -82,9 +81,9 @@ class Board:
             blockText = ""
             for i in range(maxNbRowBlocks):
                 blocks = self.getRowBlocks(row)
-                nbDefs = blocks.getNbDefs()
+                nbDefs = len(blocks)
                 index = i + nbDefs - maxNbRowBlocks
-                blockText += ("%3i" % blocks.getDef(index)) if index >= 0 else "   "
+                blockText += ("%3i" % blocks[index]) if index >= 0 else "   "
             if spacesForRowBlock > 0:
                 blockText = blockText.rjust(spacesForRowBlock)
             line += blockText
@@ -115,11 +114,11 @@ class Board:
 
 
     def getMaxNbRowBlocks(self):
-        return max(blocks.getNbDefs() for blocks in self.rowBlocks)
+        return max(len(blocks) for blocks in self.rowBlocks)
 
 
     def getMaxNbColBlocks(self):
-        return max(blocks.getNbDefs() for blocks in self.colBlocks)
+        return max(len(blocks) for blocks in self.colBlocks)
 
 
     def getRowBlocks(self, row):
