@@ -124,6 +124,10 @@ def fillFromStart(line):
     return line
 
 
+def fillFromEnd(line):
+    return fillFromStart(algo.line.MirroredLine(line))
+
+
 def smallestPossibleBlockPositions(blocks):
     """
     Return the smallest possible index (of first cell) for each block (= squeeze them to the left or to the top).
@@ -222,29 +226,3 @@ def emptyUnknownCells(line):
         if line.getCell(i) == model.cellState.CellState.Unknown:
             line.setCell(i, model.cellState.CellState.Empty)
 
-
-def applyRuleOnLines(board, isRow, isMirror, rule):
-    """
-    Apply the given algo on the given line (rows or columns) of the board
-    :param board:
-    :param isRow: boolean defining which rows/cols to use
-    :param isMirror: boolean defining which rows/cols to use
-    :param rule: must be a callable which accept a Line
-    :return: the nbr of lines for which one rule was evaluated
-    """
-
-    print("Applying rule '%s' for %s (isMirror=%s)" % (getattr(rule, '__name__', str(rule)), "rows" if isRow else "columns", isMirror))
-    nbEvaluatedLines = 0
-    for index in range(board.nbRows if isRow else board.nbCols):
-        completed = board.grid.isCompletedRow(index) if isRow else board.grid.isCompletedCol(index)
-        if completed:
-            continue
-        line = algo.line.BoardLine(board, isRow=isRow, index=index, isMirror=isMirror)
-        simplifiedLine = algo.line.SimplifiedLine(line)
-        if simplifiedLine.isComplete:
-            emptyUnknownCells(line)
-        else:
-            rule(simplifiedLine)
-        nbEvaluatedLines += 1
-
-    return nbEvaluatedLines

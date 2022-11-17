@@ -168,35 +168,26 @@ class LocalLine(ILine):
 
 class BoardLine(ILine):
     """
-    Implementation of line backed by a Board
+    Implementation of line backed by a Board, in direct order (not mirrored)
     """
 
 
-    def __init__(self, board, index, isRow, isMirror):
+    def __init__(self, board, index, isRow):
         """
-
         :param board:
         :param index:
         :param isRow:
-        :param isMirror: if True, line is mirrored
-        :param recorder: if not None, will be notified of cell value changes - must implement IBoardChangeListener
         """
         self.board = board
         self.isRow = isRow
         self.index = index
-        self.isMirror = isMirror
 
         assert (index <= board.nbRows if isRow else index <= board.nbCols)
 
 
     def getBlocks(self):
         blocks = self.board.getRowBlocks(self.index) if self.isRow else self.board.getColBlocks(self.index)
-        if self.isMirror:
-            copy = blocks.copy()
-            copy.reverse()
-            return copy
-        else:
-            return blocks
+        return blocks
 
 
     def getLength(self):
@@ -204,22 +195,46 @@ class BoardLine(ILine):
 
 
     def getCell(self, index):
-        if self.isMirror:
-            index = self.getLength() - index - 1
         row, col = (self.index, index) if self.isRow else (index, self.index)
         return self.board.get(row, col)
 
 
     def setCell(self, index, cellState):
-        if self.isMirror:
-            index = self.getLength() - index - 1
         row, col = (self.index, index) if self.isRow else (index, self.index)
         self.board.set(row, col, cellState)
 
 
+class MirroredLine(ILine):
+    """
+    Decorator of an ILine to make it look mirrored
+    """
+
+
+    def __init__(self, other):
+        assert isinstance(other, ILine)
+        self.other = other
+
+
+    def getBlocks(self):
+        copy = self.other.getBlocks().copy()
+        copy.reverse()
+        return copy
+
+    def getLength(self):
+        return self.other.getLength()
+
+
+    def getCell(self, index):
+        return self.other.getCell(self.other.getLength() - index - 1)
+
+
+    def setCell(self, index, cellState):
+        self.other.setCell(self.other.getLength() - index - 1, cellState)
+
+
 class SimplifiedLine(ILine):
     """
-    Decorator of an ILine to make it looks simplified
+    Decorator of an ILine to make it look simplified
     Simplification means:
         - skip leading/trailing cells until last Empty included
         - skip all corresponding Blocks
