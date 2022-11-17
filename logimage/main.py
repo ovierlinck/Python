@@ -1,5 +1,6 @@
 import algo.algo
 import algo.line
+import data
 import model.board
 import model.colors
 import model.formatters
@@ -68,56 +69,8 @@ def applyRuleOnRowsAndCols(board, isMirror, rule):
 
 if __name__ == "__main__":
 
-    # 59367 from nonograms.org
-    board = model.board.Board(
-        [
-            [5],
-            [1, 1],
-            [1, 1],
-            [1, 1, 1, 1],
-            [1, 1],
-            [1, 1],
-            [1, 1],
-            [1, 2, 1, 1],
-            [2, 1, 2],
-        ],
-        [
-            [7],
-            [1, 1],
-            [1, 1, 1],
-            [1, 1],
-            [1, 1, 1],
-            [1, 1],
-            [3, 1],
-            [6],
-        ])
 
-    # 55917 from nonograms.org
-    board = model.board.Board(
-        [
-            [3],
-            [1, 1],
-            [1, 1, 1],
-            [3, 1],
-            [5, 1],
-            [1, 1, 1],
-            [1, 4],
-            [1, 1, 1],
-            [1, 2, 2],
-            [2, 3, 1]
-        ],
-        [
-            [1],
-            [2, 3],
-            [4, 1, 1],
-            [1, 3],
-            [1, 1, 1, 2],
-            [1, 1, 2],
-            [4, 1, 1],
-            [1, 1],
-            [1, 1],
-            [5],
-        ])
+    board = data.boards[59367]
 
     board.setFormatter(MyFormatter())
 
