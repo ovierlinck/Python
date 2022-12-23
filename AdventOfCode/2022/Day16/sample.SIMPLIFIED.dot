@@ -1,0 +1,16 @@
+graph {
+AA [label="AA\n 0"]
+BB [label="BB\n 13"]
+CC [label="CC\n 2"]
+DD [label="DD\n 20"]
+EE [label="EE\n 3"]
+HH [label="HH\n 22"]
+JJ [label="JJ\n 21"]
+AA--DD [label="1"]
+AA--BB [label="1"]
+AA--JJ [label="2"]
+BB--CC [label="1"]
+CC--DD [label="1"]
+DD--EE [label="1"]
+EE--HH [label="3"]
+}

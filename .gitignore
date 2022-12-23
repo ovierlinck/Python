@@ -1,0 +1,49 @@
+# Files ignored by git
+
+
+#project files
+.project
+.cproject
+.settings
+*.autosave
+.vscode
+.idea
+build
+debug
+
+# Java precompiled classes
+.classpath
+*.class
+*.jar
+
+# KDevelop files
+*.kdev4
+
+#backup files from some editors
+*~
+
+# Archives
+*.gz
+*.tar
+*.tgz
+*.zip
+*.rar
+
+# thumbnails
+Thumbs.db
+
+
+#Python bytecode cache
+__pycache__
+
+# Pre-compile Python scripts
+*.pyc
+
+
+# other Python virtual environments
+pyvenv/
+venv/
+
+# PyCharm IDE folders
+.run
+*.user
